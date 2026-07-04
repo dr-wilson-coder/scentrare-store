@@ -19,8 +19,11 @@ const PARCH = "#F1E7D6";      // parchment text
 const PARCH_DIM = "#B9AA96";  // dimmed body text
 const GOLD = "#C79A4B";       // aged brass accent
 const GOLD_BRIGHT = "#E3B96A";
+const GREEN = "#2F4A3A";      // deep bottle-glass green, secondary accent
+const GREEN_BRIGHT = "#4A7059";
 const WINE = "#7C2F2F";       // oxblood, used sparingly for urgency/CTA
 const LINE = "rgba(199,154,75,0.18)";
+const LINE_GREEN = "rgba(74,112,89,0.3)";
 
 const DISPLAY_FONT = "'Fraunces', serif";
 const BODY_FONT = "'Inter', sans-serif";
@@ -45,7 +48,7 @@ const BRANDS = [
   { id: "amouage", name: "Amouage", origin: "Oman", blurb: "Rare naturals, royal lineage, uncompromising." },
   { id: "ajmal", name: "Ajmal", origin: "U.A.E.", blurb: "Century-old perfumers, concentrated attars." },
   { id: "swissarabian", name: "Swiss Arabian", origin: "U.A.E.", blurb: "Precision blending, built for layering." },
-  { id: "houseoils", name: "ScentRare Oils", origin: "House label", blurb: "Alcohol-free roll-on oils, made in-house." },
+  { id: "houseoils", name: "Perfume Wura Oils", origin: "House label", blurb: "Alcohol-free roll-on oils, made in-house." },
 ];
 
 const PRODUCTS = [
@@ -133,15 +136,39 @@ function useCountdown(hours) {
    family. It's the one visual mark that repeats across the whole
    site instead of stock photography.
 =======================================================================*/
-function Bottle({ hue = GOLD, size = 64, animate = false }) {
+function Bottle({ hue = GOLD, size = 64, animate = false, floor = true }) {
+  const gid = useRef("g" + Math.random().toString(36).slice(2, 9)).current;
   return (
-    <svg width={size} height={size * 1.4} viewBox="0 0 60 84" fill="none" style={animate ? { animation: "bob 4.5s ease-in-out infinite" } : undefined}>
-      <rect x="24" y="4" width="12" height="10" rx="2" fill={GOLD} opacity="0.9" />
-      <rect x="21" y="0" width="18" height="6" rx="2" fill="#0E0B08" />
-      <path d="M14 20 Q14 14 22 14 H38 Q46 14 46 20 V70 Q46 78 38 80 H22 Q14 78 14 70 Z" fill={INK_3} stroke={hue} strokeWidth="1.2" />
-      <path d="M17 34 Q17 28 23 28 H37 Q43 28 43 34 V68 Q43 74 37 76 H23 Q17 74 17 68 Z" fill={hue} opacity="0.85" />
-      <rect x="17" y="34" width="26" height="6" fill="#FFFFFF" opacity="0.08" />
-    </svg>
+    <div style={{ position: "relative", width: size, display: "inline-block" }}>
+      <svg width={size} height={size * 1.4} viewBox="0 0 60 84" fill="none" style={animate ? { animation: "bob 4.5s ease-in-out infinite", position: "relative", zIndex: 1 } : { position: "relative", zIndex: 1 }}>
+        <defs>
+          <linearGradient id={`liquid-${gid}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={hue} stopOpacity="0.95" />
+            <stop offset="55%" stopColor={hue} stopOpacity="0.78" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0.15" />
+          </linearGradient>
+          <linearGradient id={`glass-${gid}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.02" />
+            <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.14" />
+            <stop offset="60%" stopColor="#FFFFFF" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        <rect x="24" y="4" width="12" height="10" rx="2" fill={GOLD} opacity="0.9" />
+        <rect x="21" y="0" width="18" height="6" rx="2" fill="#0E0B08" />
+        <path d="M14 20 Q14 14 22 14 H38 Q46 14 46 20 V70 Q46 78 38 80 H22 Q14 78 14 70 Z" fill={INK_3} stroke={hue} strokeWidth="1.2" />
+        <path d="M14 20 Q14 14 22 14 H38 Q46 14 46 20 V70 Q46 78 38 80 H22 Q14 78 14 70 Z" fill={`url(#glass-${gid})`} />
+        <path d="M17 34 Q17 28 23 28 H37 Q43 28 43 34 V68 Q43 74 37 76 H23 Q17 74 17 68 Z" fill={`url(#liquid-${gid})`} />
+        <rect x="17" y="34" width="26" height="6" fill="#FFFFFF" opacity="0.1" />
+        <rect x="19" y="18" width="3" height="58" rx="1.5" fill="#FFFFFF" opacity="0.1" />
+      </svg>
+      {floor && (
+        <div style={{
+          position: "absolute", left: "50%", bottom: -4, width: size * 0.66, height: size * 0.14,
+          background: `radial-gradient(ellipse, ${hue}55 0%, transparent 72%)`,
+          transform: "translateX(-50%)", filter: "blur(1px)", zIndex: 0,
+        }} />
+      )}
+    </div>
   );
 }
 
@@ -173,6 +200,9 @@ function NotesPyramid({ top, heart, base }) {
 
 /* ============================== APP ================================= */
 export default function App() {
+  const [introDone, setIntroDone] = useState(() => {
+    try { return sessionStorage.getItem("pw_intro_seen") === "1"; } catch (e) { return false; }
+  });
   const [cart, setCart] = useState([]); // {id, qty}
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -182,6 +212,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [collectionFilter, setCollectionFilter] = useState("all");
   const [brandFilter, setBrandFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [reviews, setReviews] = useState(SEED_REVIEWS);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
@@ -249,13 +280,24 @@ export default function App() {
   const subtotal = cartDetailed.reduce((s, c) => s + c.price * c.qty, 0);
   const cartCount = cart.reduce((s, c) => s + c.qty, 0);
 
-  const filteredProducts = PRODUCTS.filter(
-    (p) => (collectionFilter === "all" || p.collection === collectionFilter) &&
-           (brandFilter === "all" || p.brand === brandFilter)
-  );
+  const filteredProducts = PRODUCTS.filter((p) => {
+    const matchesFilters = (collectionFilter === "all" || p.collection === collectionFilter) &&
+      (brandFilter === "all" || p.brand === brandFilter);
+    if (!searchQuery.trim()) return matchesFilters;
+    const q = searchQuery.trim().toLowerCase();
+    const brandName = BRANDS.find((b) => b.id === p.brand)?.name.toLowerCase() || "";
+    return (p.name.toLowerCase().includes(q) || brandName.includes(q) || p.collection.includes(q)) && matchesFilters;
+  });
 
   const scrollToShop = (collectionId) => {
     if (collectionId) setCollectionFilter(collectionId);
+    shopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleSearch = (q) => {
+    setSearchQuery(q);
+    setCollectionFilter("all");
+    setBrandFilter("all");
     shopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -288,12 +330,20 @@ export default function App() {
     <div style={{ background: INK, color: PARCH, fontFamily: BODY_FONT, minHeight: "100vh" }}>
       <GlobalStyle />
 
+      {!introDone && (
+        <IntroSplash onDone={() => {
+          setIntroDone(true);
+          try { sessionStorage.setItem("pw_intro_seen", "1"); } catch (e) {}
+        }} />
+      )}
+
       <AnnouncementBar />
       <Header
         cartCount={cartCount}
         onCart={() => setCartOpen(true)}
         onTrack={() => setTrackOpen(true)}
         onShop={() => scrollToShop(null)}
+        onSearch={handleSearch}
       />
 
       <Hero onShop={() => scrollToShop(null)} onExplore={() => scrollToShop("oud")} />
@@ -312,6 +362,8 @@ export default function App() {
         setCollectionFilter={setCollectionFilter}
         setBrandFilter={setBrandFilter}
         onAdd={addToCart}
+        searchQuery={searchQuery}
+        onClearSearch={() => setSearchQuery("")}
       />
 
       <TrackBanner onTrack={() => setTrackOpen(true)} />
@@ -358,6 +410,8 @@ export default function App() {
       {reviewOpen && <ReviewModal onClose={() => setReviewOpen(false)} onSubmit={submitReview} />}
 
       {toast && <Toast msg={toast} />}
+
+      <WhatsAppButton />
     </div>
   );
 }
@@ -376,6 +430,21 @@ function GlobalStyle() {
       @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
       @keyframes slideUp { from { opacity:0; transform: translateY(16px);} to { opacity:1; transform: translateY(0);} }
       @keyframes toastIn { from { opacity:0; transform: translate(-50%, 12px);} to { opacity:1; transform: translate(-50%, 0);} }
+      @keyframes bottleFall {
+        0% { transform: translateX(-50%) translateY(-130vh) rotate(-14deg); }
+        58% { transform: translateX(-50%) translateY(0) rotate(6deg); }
+        72% { transform: translateX(-50%) translateY(-16px) rotate(-4deg); }
+        86% { transform: translateX(-50%) translateY(0) rotate(2deg); }
+        100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+      }
+      @keyframes petalBurst {
+        0% { transform: translate(-50%, 0) scale(0) rotate(0deg); opacity: 1; }
+        14% { transform: translate(-50%, 0) scale(1) rotate(15deg); opacity: 1; }
+        100% { transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(0.55) rotate(300deg); opacity: 0; }
+      }
+      @keyframes impactRing { 0% { transform: translateX(-50%) scale(0.2); opacity: 0.9; } 100% { transform: translateX(-50%) scale(3.2); opacity: 0; } }
+      @keyframes impactFlash { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+      @keyframes introFadeOut { to { opacity: 0; visibility: hidden; } }
       .fade-scale-enter { animation: slideUp .35s ease; }
       @media (prefers-reduced-motion: reduce) {
         * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
@@ -387,12 +456,108 @@ function GlobalStyle() {
   );
 }
 
+/* ============================ INTRO SPLASH ============================
+   Opening moment: a bottle drops from off-screen, lands with a bounce,
+   and bursts into scattering floral petals before revealing the site.
+   Respects prefers-reduced-motion and is skippable.
+=========================================================================*/
+function IntroSplash({ onDone }) {
+  const [phase, setPhase] = useState("fall"); // fall -> splash -> fadeout
+  const finishedRef = useRef(false);
+
+  const petals = useMemo(() => {
+    const hues = [GOLD, GOLD_BRIGHT, "#D98BA6", GREEN_BRIGHT, "#E8C77A"];
+    return Array.from({ length: 20 }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / 20 + (Math.random() * 0.4 - 0.2);
+      const dist = 90 + Math.random() * 150;
+      return {
+        dx: Math.cos(angle) * dist,
+        dy: -Math.abs(Math.sin(angle) * dist) - Math.random() * 40,
+        size: 9 + Math.random() * 12,
+        delay: Math.random() * 90,
+        hue: hues[i % hues.length],
+      };
+    });
+  }, []);
+
+  const finish = useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    document.body.style.overflow = "";
+    onDone();
+  }, [onDone]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) { finish(); return; }
+    const t1 = setTimeout(() => setPhase("splash"), 1000);
+    const t2 = setTimeout(() => setPhase("fadeout"), 1000 + 1000);
+    const t3 = setTimeout(finish, 1000 + 1000 + 550);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [finish]);
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 100, background: INK,
+        display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+        animation: phase === "fadeout" ? "introFadeOut .55s ease forwards" : undefined,
+      }}
+    >
+      <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 50% 60%, ${INK_2} 0%, ${INK} 70%)` }} />
+
+      <button
+        onClick={finish}
+        style={{ position: "absolute", top: 22, right: 22, color: PARCH_DIM, fontSize: 12, zIndex: 2, border: `1px solid ${LINE}`, padding: "6px 14px", borderRadius: 999 }}
+      >
+        Skip
+      </button>
+
+      <div style={{ position: "relative", width: 4, height: 4 }}>
+        {phase !== "fall" && (
+          <>
+            <div style={{
+              position: "absolute", left: "50%", bottom: 4, width: 30, height: 30, borderRadius: "50%",
+              border: `2px solid ${GOLD_BRIGHT}`, animation: "impactRing .8s ease-out forwards",
+            }} />
+            <div style={{
+              position: "absolute", left: "50%", bottom: -10, transform: "translateX(-50%)",
+              width: 140, height: 40, borderRadius: "50%",
+              background: `radial-gradient(ellipse, ${GOLD_BRIGHT}88 0%, transparent 72%)`,
+              animation: "impactFlash .5s ease-out forwards",
+            }} />
+          </>
+        )}
+
+        <div style={{
+          position: "absolute", left: "50%", bottom: 4,
+          animation: phase === "fall" ? "bottleFall 1s cubic-bezier(.4,0,.2,1) forwards" : "none",
+          transform: phase === "fall" ? undefined : "translateX(-50%)",
+          opacity: phase === "fadeout" ? 0 : 1, transition: "opacity .4s ease",
+        }}>
+          <Bottle hue={GOLD} size={110} animate={phase !== "fall"} floor={phase !== "fall"} />
+        </div>
+
+        {phase !== "fall" && petals.map((p, i) => (
+          <span key={i} style={{
+            position: "absolute", left: "50%", bottom: 8, width: p.size, height: p.size * 1.3,
+            background: p.hue, borderRadius: "50% 50% 50% 0", opacity: 0,
+            animation: `petalBurst .95s ease-out ${p.delay}ms forwards`,
+            "--dx": `${p.dx}px`, "--dy": `${p.dy}px`,
+          }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ============================ ANNOUNCEMENT ============================ */
 function AnnouncementBar() {
   const msgs = [
     "Free delivery in Accra on orders over GH₵400",
     "Pay by MTN MoMo, Telecel Cash or card at checkout",
-    "New: ScentRare in-house oil line — 12ml roll-ons",
+    "New: Perfume Wura in-house oil line — 12ml roll-ons",
   ];
   const [i, setI] = useState(0);
   useEffect(() => { const iv = setInterval(() => setI((v) => (v + 1) % msgs.length), 3800); return () => clearInterval(iv); }, []);
@@ -404,37 +569,63 @@ function AnnouncementBar() {
 }
 
 /* ================================ HEADER =============================== */
-function Header({ cartCount, onCart, onTrack, onShop }) {
+function Header({ cartCount, onCart, onTrack, onShop, onSearch }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => { if (searchOpen) inputRef.current?.focus(); }, [searchOpen]);
+
+  const submitSearch = (e) => {
+    e.preventDefault();
+    onSearch(query);
+    setSearchOpen(false);
+  };
+
   return (
-    <header style={{ borderBottom: `1px solid ${LINE}`, background: `${INK}E6`, backdropFilter: "blur(8px)" }} className="sticky top-0 z-30">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-2">
+    <header style={{ borderBottom: `1px solid ${LINE}`, background: INK }} className="sticky top-0 z-30">
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-5 py-4 gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button className="md:hidden mr-1" onClick={() => setMenuOpen((v) => !v)} aria-label="Menu">
             <Menu size={20} color={PARCH} />
           </button>
           <Sparkles size={16} color={GOLD} />
-          <span style={{ fontFamily: DISPLAY_FONT, fontSize: 22, letterSpacing: 0.5 }}>ScentRare</span>
+          <span style={{ fontFamily: DISPLAY_FONT, fontSize: 22, letterSpacing: 0.5 }}>Perfume Wura</span>
         </div>
 
-        <nav className="hidden md:flex items-center gap-7 text-[13px]" style={{ color: PARCH_DIM }}>
-          <button onClick={onShop} className="hover:opacity-100" style={{ color: PARCH }}>Shop</button>
-          <button onClick={onShop} className="hover:opacity-100">Collections</button>
-          <button onClick={onShop} className="hover:opacity-100">Brands</button>
-          <button onClick={onTrack} className="hover:opacity-100">Track Order</button>
-        </nav>
+        {!searchOpen && (
+          <nav className="hidden md:flex items-center gap-7 text-[13px]" style={{ color: PARCH_DIM }}>
+            <button onClick={onShop} className="hover:opacity-100" style={{ color: PARCH }}>Shop</button>
+            <button onClick={onShop} className="hover:opacity-100">Collections</button>
+            <button onClick={onShop} className="hover:opacity-100">Brands</button>
+            <button onClick={onTrack} className="hover:opacity-100">Track Order</button>
+          </nav>
+        )}
 
-        <div className="flex items-center gap-4">
-          <Search size={17} color={PARCH_DIM} className="hidden sm:block" />
-          <button onClick={onCart} className="relative">
-            <ShoppingBag size={19} color={PARCH} />
-            {cartCount > 0 && (
-              <span style={{ background: GOLD, color: INK }} className="absolute -top-2 -right-2 text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {searchOpen ? (
+          <form onSubmit={submitSearch} className="flex-1 flex items-center gap-2" style={{ animation: "slideUp .2s ease" }}>
+            <input
+              ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search fragrances, brands…"
+              style={{ background: INK_2, border: `1px solid ${LINE}`, color: PARCH }}
+              className="flex-1 px-3 py-2 rounded-full text-sm outline-none min-w-0"
+            />
+            <button type="button" onClick={() => { setSearchOpen(false); setQuery(""); }}><X size={17} color={PARCH_DIM} /></button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-4 shrink-0">
+            <button onClick={() => setSearchOpen(true)} aria-label="Search"><Search size={17} color={PARCH_DIM} /></button>
+            <button onClick={onCart} className="relative">
+              <ShoppingBag size={19} color={PARCH} />
+              {cartCount > 0 && (
+                <span style={{ background: GOLD, color: INK }} className="absolute -top-2 -right-2 text-[10px] font-semibold rounded-full w-4 h-4 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </div>
       {menuOpen && (
         <div className="md:hidden flex flex-col gap-3 px-5 pb-4 text-sm" style={{ color: PARCH_DIM }}>
@@ -448,21 +639,26 @@ function Header({ cartCount, onCart, onTrack, onShop }) {
 
 /* ================================= HERO ================================= */
 function Hero({ onShop, onExplore }) {
-  const particles = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
-    left: 6 + Math.random() * 88,
+  const particles = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
+    left: 8 + Math.random() * 84,
     delay: Math.random() * 6,
-    dur: 6 + Math.random() * 5,
-    dx: (Math.random() - 0.5) * 60,
+    dur: 7 + Math.random() * 5,
+    dx: (Math.random() - 0.5) * 50,
     size: 2 + Math.random() * 3,
   })), []);
 
   return (
     <section style={{ position: "relative", overflow: "hidden", borderBottom: `1px solid ${LINE}` }} className="px-5 pt-14 pb-20 md:pt-24 md:pb-28">
-      <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 70% 20%, ${INK_2} 0%, ${INK} 65%)` }} />
+      <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 72% 18%, ${INK_2} 0%, ${INK} 60%)` }} />
+      <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 15% 85%, ${GREEN}22 0%, transparent 55%)` }} />
+      <svg style={{ position: "absolute", inset: 0, opacity: 0.35, mixBlendMode: "overlay", pointerEvents: "none" }} width="100%" height="100%">
+        <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" /></filter>
+        <rect width="100%" height="100%" filter="url(#grain)" opacity="0.5" />
+      </svg>
       {particles.map((p, idx) => (
         <span key={idx} style={{
           position: "absolute", left: `${p.left}%`, bottom: 0, width: p.size, height: p.size,
-          borderRadius: "50%", background: GOLD, filter: "blur(0.5px)",
+          borderRadius: "50%", background: GOLD, filter: "blur(0.5px)", willChange: "transform",
           animation: `drift ${p.dur}s ease-in ${p.delay}s infinite`, "--dx": `${p.dx}px`,
         }} />
       ))}
@@ -482,16 +678,24 @@ function Hero({ onShop, onExplore }) {
               <button onClick={onShop} style={{ background: GOLD, color: INK }} className="px-6 py-3 rounded-full text-sm font-semibold flex items-center gap-2 hover:brightness-110 transition">
                 Shop the Collection <ArrowRight size={15} />
               </button>
-              <button onClick={onExplore} style={{ border: `1px solid ${LINE}`, color: PARCH }} className="px-6 py-3 rounded-full text-sm flex items-center gap-2 hover:border-opacity-60 transition">
+              <button onClick={onExplore} style={{ border: `1px solid ${GREEN_BRIGHT}66`, color: GREEN_BRIGHT }} className="px-6 py-3 rounded-full text-sm flex items-center gap-2 hover:border-opacity-60 transition">
                 Explore Oud <ChevronRight size={15} />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="relative flex justify-center">
-          <div style={{ position: "absolute", width: 260, height: 260, borderRadius: "50%", background: `radial-gradient(circle, ${GOLD}33, transparent 70%)`, filter: "blur(6px)" }} />
-          <Bottle hue={GOLD} size={150} animate />
+        <div className="relative flex justify-center items-end" style={{ minHeight: 220 }}>
+          <div style={{ position: "absolute", width: 280, height: 280, borderRadius: "50%", background: `radial-gradient(circle, ${GOLD}33, transparent 70%)`, filter: "blur(6px)" }} />
+          <div style={{ position: "absolute", left: "50%", transform: "translateX(-135%)", opacity: 0.55 }} className="hidden sm:block">
+            <Bottle hue={GREEN_BRIGHT} size={80} />
+          </div>
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <Bottle hue={GOLD} size={150} animate />
+          </div>
+          <div style={{ position: "absolute", left: "50%", transform: "translateX(55%)", opacity: 0.55 }} className="hidden sm:block">
+            <Bottle hue="#C97C93" size={68} />
+          </div>
         </div>
       </div>
     </section>
@@ -501,7 +705,7 @@ function Hero({ onShop, onExplore }) {
 /* ============================ COLLECTIONS ============================ */
 function CollectionsSection({ onPick }) {
   return (
-    <section className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+    <section className="max-w-6xl mx-auto px-5 py-12 md:py-24">
       <Reveal>
         <div className="flex items-end justify-between mb-8">
           <div>
@@ -510,15 +714,19 @@ function CollectionsSection({ onPick }) {
           </div>
         </div>
       </Reveal>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         {COLLECTIONS.map((c, i) => (
           <Reveal key={c.id} delay={i * 70}>
             <button
               onClick={() => onPick(c.id)}
-              style={{ background: INK_2, border: `1px solid ${LINE}` }}
-              className="w-full text-left p-5 rounded-2xl hover:-translate-y-1 transition-transform duration-300 group h-full flex flex-col justify-between"
+              style={{
+                background: `linear-gradient(155deg, ${c.hue}26 0%, ${INK_2} 55%)`,
+                border: `1px solid ${LINE}`, position: "relative", overflow: "hidden",
+              }}
+              className="w-full text-left p-4 md:p-5 rounded-2xl hover:-translate-y-1 transition-transform duration-300 group h-full flex flex-col justify-between"
             >
-              <div className="flex items-start justify-between">
+              <div style={{ position: "absolute", top: -30, right: -30, width: 110, height: 110, borderRadius: "50%", background: `radial-gradient(circle, ${c.hue}40, transparent 70%)` }} />
+              <div className="flex items-start justify-between relative">
                 <div>
                   <h3 style={{ fontSize: 20 }}>{c.name}</h3>
                   <p style={{ color: PARCH_DIM, fontSize: 12.5 }} className="mt-1 max-w-[16ch]">{c.tag}</p>
@@ -527,7 +735,7 @@ function CollectionsSection({ onPick }) {
                   <Bottle hue={c.hue} size={44} />
                 </div>
               </div>
-              <span style={{ color: GOLD }} className="text-xs flex items-center gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span style={{ color: GOLD }} className="text-xs flex items-center gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity relative">
                 View pieces <ChevronRight size={13} />
               </span>
             </button>
@@ -591,7 +799,7 @@ function ComboCard({ combo, onAdd, delay }) {
 
 function PromotionsSection({ combos, onAdd }) {
   return (
-    <section style={{ background: INK_2, borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }} className="py-16 md:py-24">
+    <section style={{ background: INK_2, borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }} className="py-12 md:py-24">
       <div className="max-w-6xl mx-auto px-5">
         <Reveal>
           <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12 }}>LIMITED-TIME BUNDLES</span>
@@ -608,12 +816,12 @@ function PromotionsSection({ combos, onAdd }) {
 /* ============================== BRANDS ============================== */
 function BrandsSection({ onPick }) {
   return (
-    <section className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+    <section className="max-w-6xl mx-auto px-5 py-12 md:py-24">
       <Reveal>
         <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12 }}>THE HOUSES WE CARRY</span>
         <h2 style={{ fontSize: 32 }} className="mt-2 mb-8">Top brands</h2>
       </Reveal>
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         {BRANDS.map((b, i) => (
           <Reveal key={b.id} delay={i * 60}>
             <button
@@ -640,7 +848,7 @@ function ProductCard({ p, onAdd, delay }) {
   const hue = COLLECTIONS.find((c) => c.id === p.collection)?.hue;
   return (
     <Reveal delay={delay}>
-      <div style={{ background: INK_2, border: `1px solid ${LINE}` }} className="rounded-2xl p-5 h-full flex flex-col group">
+      <div style={{ background: INK_2, border: `1px solid ${LINE}` }} className="rounded-2xl p-4 md:p-5 h-full flex flex-col group">
         <div className="flex justify-between items-start">
           {p.badge && (
             <span style={{ background: `${GOLD}22`, color: GOLD_BRIGHT }} className="text-[10px] font-semibold px-2 py-0.5 rounded-full">{p.badge}</span>
@@ -648,9 +856,12 @@ function ProductCard({ p, onAdd, delay }) {
           <Heart size={15} color={PARCH_DIM} className="ml-auto cursor-pointer hover:text-current" style={{ color: PARCH_DIM }} />
         </div>
 
-        <div className="flex justify-center py-4">
+        <div
+          style={{ background: `radial-gradient(circle at 50% 35%, ${hue}2E 0%, transparent 68%)`, borderRadius: 14 }}
+          className="flex justify-center py-5 -mx-1"
+        >
           <div className="group-hover:-translate-y-1 transition-transform duration-300">
-            <Bottle hue={hue} size={70} />
+            <Bottle hue={hue} size={72} />
           </div>
         </div>
 
@@ -679,13 +890,22 @@ function ProductCard({ p, onAdd, delay }) {
   );
 }
 
-function ShopSection({ shopRef, products, collectionFilter, brandFilter, setCollectionFilter, setBrandFilter, onAdd }) {
+function ShopSection({ shopRef, products, collectionFilter, brandFilter, setCollectionFilter, setBrandFilter, onAdd, searchQuery, onClearSearch }) {
   return (
-    <section ref={shopRef} className="max-w-6xl mx-auto px-5 py-16 md:py-24 scroll-mt-20">
+    <section ref={shopRef} className="max-w-6xl mx-auto px-5 py-12 md:py-24 scroll-mt-20">
       <Reveal>
         <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12 }}>THE FULL SHELF</span>
         <h2 style={{ fontSize: 32 }} className="mt-2 mb-6">Shop all fragrances</h2>
       </Reveal>
+
+      {searchQuery && (
+        <div style={{ background: `${GREEN}33`, border: `1px solid ${LINE_GREEN}` }} className="flex items-center justify-between px-4 py-2.5 rounded-full mb-5 text-sm">
+          <span>Showing results for <strong>"{searchQuery}"</strong></span>
+          <button onClick={onClearSearch} style={{ color: GOLD_BRIGHT }} className="flex items-center gap-1 text-xs shrink-0 ml-3">
+            Clear <X size={12} />
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-8">
         <FilterChip active={collectionFilter === "all"} onClick={() => setCollectionFilter("all")}>All families</FilterChip>
@@ -702,7 +922,7 @@ function ShopSection({ shopRef, products, collectionFilter, brandFilter, setColl
       {products.length === 0 ? (
         <p style={{ color: PARCH_DIM }}>No pieces match that combination yet — try clearing a filter.</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {products.map((p, i) => <ProductCard key={p.id} p={p} onAdd={onAdd} delay={(i % 4) * 60} />)}
         </div>
       )}
@@ -732,8 +952,8 @@ function TrackBanner({ onTrack }) {
     <section style={{ background: INK_2, borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
       <div className="max-w-6xl mx-auto px-5 py-10 flex flex-col md:flex-row items-center justify-between gap-5">
         <div className="flex items-center gap-4">
-          <div style={{ background: `${GOLD}1A`, borderRadius: 999 }} className="w-11 h-11 flex items-center justify-center">
-            <Truck size={19} color={GOLD} />
+          <div style={{ background: `${GREEN_BRIGHT}22`, borderRadius: 999 }} className="w-11 h-11 flex items-center justify-center">
+            <Truck size={19} color={GREEN_BRIGHT} />
           </div>
           <div>
             <h3 style={{ fontSize: 18 }}>Already ordered?</h3>
@@ -752,7 +972,7 @@ function TrackBanner({ onTrack }) {
 function ReviewsSection({ reviews, onWrite }) {
   const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
   return (
-    <section className="max-w-6xl mx-auto px-5 py-16 md:py-24">
+    <section className="max-w-6xl mx-auto px-5 py-12 md:py-24">
       <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
           <div>
@@ -764,7 +984,7 @@ function ReviewsSection({ reviews, onWrite }) {
               </span>
             </h2>
           </div>
-          <button onClick={onWrite} style={{ border: `1px solid ${LINE}` }} className="px-5 py-2.5 rounded-full text-sm">Write a review</button>
+          <button onClick={onWrite} style={{ border: `1px solid ${GREEN_BRIGHT}66`, color: GREEN_BRIGHT }} className="px-5 py-2.5 rounded-full text-sm">Write a review</button>
         </div>
       </Reveal>
       <div className="grid md:grid-cols-2 gap-4">
@@ -828,10 +1048,12 @@ function Footer() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={15} color={GOLD} />
-            <span style={{ fontFamily: DISPLAY_FONT, fontSize: 19 }}>ScentRare</span>
+            <span style={{ fontFamily: DISPLAY_FONT, fontSize: 19 }}>Perfume Wura</span>
           </div>
           <p style={{ color: PARCH_DIM, fontSize: 12.5 }} className="leading-relaxed">Curated Arabian and niche fragrance, shipped across Ghana.</p>
-          <div className="flex gap-3 mt-4">
+          <div className="flex items-center gap-3 mt-4">
+            <a href="https://wa.me/233543864580" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon size={16} color={PARCH_DIM} /></a>
+            <a href="https://www.tiktok.com/@perfumewura" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><TikTokIcon size={15} color={PARCH_DIM} /></a>
             <Instagram size={16} color={PARCH_DIM} />
             <Facebook size={16} color={PARCH_DIM} />
           </div>
@@ -845,8 +1067,8 @@ function Footer() {
         <div>
           <h4 style={{ color: PARCH, fontSize: 13 }} className="mb-3">Support</h4>
           <ul style={{ color: PARCH_DIM }} className="space-y-2 text-[13px]">
-            <li className="flex items-center gap-2"><Phone size={13} /> +233 24 000 0000</li>
-            <li className="flex items-center gap-2"><Mail size={13} /> hello@scentrare.gh</li>
+            <li className="flex items-center gap-2"><Phone size={13} /> 054 386 4580 / 024 273 9071</li>
+            <li className="flex items-center gap-2"><Mail size={13} /> hello@perfumewura.com</li>
             <li className="flex items-center gap-2"><MapPin size={13} /> Osu, Accra</li>
           </ul>
         </div>
@@ -860,7 +1082,7 @@ function Footer() {
         </div>
       </div>
       <div style={{ color: PARCH_DIM, borderTop: `1px solid ${LINE}` }} className="max-w-6xl mx-auto mt-10 pt-6 text-[11px] flex flex-col sm:flex-row justify-between gap-2">
-        <span>© 2026 ScentRare. All rights reserved.</span>
+        <span>© 2026 Perfume Wura. All rights reserved.</span>
         <span className="flex items-center gap-1"><ShieldCheck size={12} /> Demo storefront — checkout and tracking run on in-browser storage, not a live payment processor.</span>
       </div>
     </footer>
@@ -877,6 +1099,64 @@ function Toast({ msg }) {
     }}>
       {msg}
     </div>
+  );
+}
+
+/* ============================ WHATSAPP BUTTON ============================ */
+function WhatsAppButton() {
+  const [open, setOpen] = useState(false);
+  const numbers = [
+    { label: "0543 864 580", wa: "233543864580" },
+    { label: "0242 739 071", wa: "233242739071" },
+  ];
+  const msg = encodeURIComponent("Hi Perfume Wura, I have a question about a fragrance");
+
+  return (
+    <div style={{ position: "fixed", bottom: 22, right: 18, zIndex: 45 }}>
+      {open && (
+        <div
+          style={{ background: INK_2, border: `1px solid ${LINE}`, boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}
+          className="absolute bottom-[64px] right-0 rounded-2xl p-2 w-52 fade-scale-enter"
+        >
+          <p style={{ color: PARCH_DIM, fontSize: 11 }} className="px-2 pt-1 pb-2">Chat on WhatsApp</p>
+          {numbers.map((n) => (
+            <a
+              key={n.wa} href={`https://wa.me/${n.wa}?text=${msg}`} target="_blank" rel="noopener noreferrer"
+              style={{ color: PARCH }} className="flex items-center gap-2 px-2 py-2 rounded-xl text-sm hover:bg-white/5 transition"
+            >
+              <WhatsAppIcon size={16} color={GREEN_BRIGHT} /> {n.label}
+            </a>
+          ))}
+        </div>
+      )}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          background: GREEN, color: "#fff", borderRadius: 999,
+          width: 54, height: 54, display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
+        }}
+        aria-label="Chat with us on WhatsApp"
+      >
+        {open ? <X size={22} /> : <WhatsAppIcon size={26} />}
+      </button>
+    </div>
+  );
+}
+
+function TikTokIcon({ size = 24, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M16.6 5.82c-.9-.94-1.44-2.13-1.5-3.47H12.4v13.6c0 1.4-1.14 2.55-2.55 2.55a2.55 2.55 0 0 1 0-5.1c.28 0 .55.04.8.13V10.7a5.36 5.36 0 0 0-.8-.06 5.36 5.36 0 1 0 5.36 5.36V9.05a8.2 8.2 0 0 0 4.79 1.53V7.77a5.6 5.6 0 0 1-3.4-1.95Z" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ size = 24, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill={color}>
+      <path d="M16.01 3C9.38 3 4 8.38 4 15.01c0 2.26.62 4.38 1.7 6.2L4 29l7.98-1.65a12 12 0 0 0 4.03.7h.01c6.63 0 12.01-5.38 12.01-12.01C28.03 8.38 22.65 3 16.01 3Zm0 21.9h-.01a9.9 9.9 0 0 1-5.05-1.38l-.36-.21-4.73.98 1-4.6-.24-.38a9.9 9.9 0 0 1-1.52-5.3c0-5.47 4.45-9.92 9.93-9.92 2.65 0 5.14 1.03 7.02 2.91a9.86 9.86 0 0 1 2.9 7.01c0 5.47-4.45 9.9-9.94 9.9Zm5.44-7.42c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.24-.46-2.37-1.47-.88-.78-1.47-1.75-1.64-2.05-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35Z" />
+    </svg>
   );
 }
 

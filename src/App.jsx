@@ -9,9 +9,9 @@ import {
 
 /* ============================== THEME ==============================
    Subject: an Accra-based perfume house selling Arabian/niche
-   fragrances — oud, amber, florals, woods — plus in-house oils.
+   fragrances â€” oud, amber, florals, woods â€” plus in-house oils.
    Palette pulls from the materials themselves: oud wood, amber
-   resin, aged brass — not a generic "luxury" template.
+   resin, aged brass â€” not a generic "luxury" template.
 ======================================================================*/
 const INK = "#15100C";        // oud-wood black-brown, base background
 const INK_2 = "#1E1611";      // raised panel
@@ -31,7 +31,7 @@ const BODY_FONT = "'Inter', sans-serif";
 const MONO_FONT = "'IBM Plex Mono', monospace";
 
 const fmt = (n) =>
-  "GH₵" + Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  "GHâ‚µ" + Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /* ============================== DATA ============================== */
 const COLLECTIONS = [
@@ -43,9 +43,9 @@ const COLLECTIONS = [
   { id: "citrus", name: "Citrus", tag: "Bright first, warm after.", hue: "#C7A93A" },
 ];
 
-/* Placeholder stock photography (Unsplash License — free for commercial use,
+/* Placeholder stock photography (Unsplash License â€” free for commercial use,
    no attribution required). Swap any of these for real product photos by
-   setting an `image` field on a product in PRODUCTS below — that always
+   setting an `image` field on a product in PRODUCTS below â€” that always
    takes priority over this pool. */
 const STOCK_PHOTOS = {
   oud: "https://images.unsplash.com/photo-1598634222670-87c5f558119c?auto=format&fit=crop&w=600&q=70",
@@ -86,7 +86,7 @@ const PRODUCTS = [
 
 const COMBOS = [
   { id: "c1", name: "Oud Discovery Duo", items: ["p5", "p16"], save: 170, hours: 46, blurb: "The house signature oud, paired with our own oud oil for layering." },
-  { id: "c2", name: "His & Hers Set", items: ["p2", "p1"], save: 85, hours: 70, blurb: "Asad for him, Yara for her — Lattafa's two most-loved bottles." },
+  { id: "c2", name: "His & Hers Set", items: ["p2", "p1"], save: 85, hours: 70, blurb: "Asad for him, Yara for her â€” Lattafa's two most-loved bottles." },
   { id: "c3", name: "Oils Starter Kit", items: ["p15", "p16", "p10"], save: 111, hours: 118, blurb: "Three roll-on oils to try before you commit to a full bottle." },
 ];
 
@@ -192,7 +192,7 @@ function Bottle({ hue = GOLD, size = 64, animate = false, floor = true }) {
    so it's used as a recurring divider instead of decorative numbering.
 =======================================================================*/
 /* ============================ 3D ROTATING GEM ==========================
-   A lightweight three.js accent — a faceted gem that slowly rotates,
+   A lightweight three.js accent â€” a faceted gem that slowly rotates,
    used sparingly at a couple of key visual moments (hero, featured
    product) rather than everywhere. Fails silently if WebGL isn't
    available, so it never breaks the page on an older device/browser.
@@ -249,7 +249,7 @@ function RotatingGem({ size = 160, hue = "#C79A4B" }) {
         if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
       };
     } catch (e) {
-      return; // WebGL unavailable — no 3D accent, rest of the page is unaffected
+      return; // WebGL unavailable â€” no 3D accent, rest of the page is unaffected
     }
   }, [size, hue]);
 
@@ -318,7 +318,7 @@ export default function App() {
           }
           if (loaded.length) setReviews((prev) => [...loaded, ...prev].sort((a, b) => b.ts - a.ts));
         }
-      } catch (e) { /* storage unavailable — seed reviews still show */ }
+      } catch (e) { /* storage unavailable â€” seed reviews still show */ }
     })();
   }, []);
 
@@ -353,7 +353,7 @@ export default function App() {
       return { ...c, name: combo.name, price: original - combo.save, isCombo: true, hue: GOLD };
     }
     const p = PRODUCTS.find((x) => x.id === c.id);
-    return { ...c, name: `${p.name} — ${p.size}`, price: p.price, hue: COLLECTIONS.find((col) => col.id === p.collection)?.hue };
+    return { ...c, name: `${p.name} â€” ${p.size}`, price: p.price, hue: COLLECTIONS.find((col) => col.id === p.collection)?.hue };
   });
 
   const subtotal = cartDetailed.reduce((s, c) => s + c.price * c.qty, 0);
@@ -459,7 +459,7 @@ export default function App() {
       {leadOpen && (
         <LeadModal
           onClose={() => { setLeadOpen(false); setLeadDismissed(true); }}
-          onSubmit={(email, name) => { saveLead(email, name); setLeadOpen(false); setLeadDismissed(true); showToast("10% code sent — check your inbox"); }}
+          onSubmit={(email, name) => { saveLead(email, name); setLeadOpen(false); setLeadDismissed(true); showToast("10% code sent â€” check your inbox"); }}
         />
       )}
 
@@ -651,9 +651,9 @@ function IntroSplash({ onDone }) {
 /* ============================ ANNOUNCEMENT ============================ */
 function AnnouncementBar() {
   const msgs = [
-    "Free delivery in Accra on orders over GH₵400",
+    "Free delivery in Accra on orders over GHâ‚µ400",
     "Pay by MTN MoMo, Telecel Cash or card at checkout",
-    "New: Perfume Wura in-house oil line — 12ml roll-ons",
+    "New: Perfume Wura in-house oil line â€” 12ml roll-ons",
   ];
   const [i, setI] = useState(0);
   useEffect(() => { const iv = setInterval(() => setI((v) => (v + 1) % msgs.length), 3800); return () => clearInterval(iv); }, []);
@@ -703,7 +703,7 @@ function Header({ cartCount, onCart, onTrack, onShop, onSearch }) {
           <form onSubmit={submitSearch} className="flex-1 flex items-center gap-2" style={{ animation: "slideUp .2s ease" }}>
             <input
               ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search fragrances, brands…"
+              placeholder="Search fragrances, brandsâ€¦"
               style={{ background: INK_2, border: `1px solid ${LINE}`, color: PARCH }}
               className="flex-1 px-3 py-2 rounded-full text-sm outline-none min-w-0"
             />
@@ -762,12 +762,12 @@ function Hero({ onShop, onExplore }) {
       <div className="max-w-6xl mx-auto relative grid md:grid-cols-2 gap-10 items-center">
         <div>
           <div style={{ animation: "slideUp .8s ease" }}>
-            <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12, letterSpacing: 1.5 }}>ACCRA · SINCE 2021</span>
+            <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12, letterSpacing: 1.5 }}>ACCRA Â· SINCE 2021</span>
             <h1 style={{ fontSize: "clamp(38px, 6vw, 62px)", lineHeight: 1.04, marginTop: 14 }}>
               Fragrance worth <span style={{ fontStyle: "italic", color: GOLD_BRIGHT }}>arriving</span> for.
             </h1>
             <p style={{ color: PARCH_DIM, maxWidth: 440 }} className="mt-5 text-[15px] leading-relaxed">
-              Oud, amber, florals and woods from Lattafa, Arabian Oud, Amouage and our own house oils —
+              Oud, amber, florals and woods from Lattafa, Arabian Oud, Amouage and our own house oils â€”
               delivered across Ghana, paid for in cedis, tracked from your phone.
             </p>
             <div className="flex flex-wrap gap-3 mt-8">
@@ -914,7 +914,7 @@ function PromotionsSection({ combos, onAdd }) {
 
 /* ========================= PERFUME OF THE WEEK ========================
    Rotates automatically based on the ISO week number, so it changes on
-   its own without needing an admin panel — no two consecutive weeks
+   its own without needing an admin panel â€” no two consecutive weeks
    land on the same product (deterministic, not random).
 =========================================================================*/
 function FeaturedSection({ onAdd }) {
@@ -955,9 +955,9 @@ function FeaturedSection({ onAdd }) {
                 <Sparkles size={11} /> Featured This Week
               </span>
               <h2 style={{ fontSize: 32 }} className="mt-4">{product.name}</h2>
-              <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12 }}>{brandName} · {product.size}</span>
+              <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12 }}>{brandName} Â· {product.size}</span>
               <p style={{ color: PARCH_DIM }} className="mt-3 text-sm leading-relaxed">
-                This week's pick — {product.rating}★ from {product.reviews} customers, opening on {product.top.toLowerCase()} before settling into {product.heart.toLowerCase()}.
+                This week's pick â€” {product.rating}â˜… from {product.reviews} customers, opening on {product.top.toLowerCase()} before settling into {product.heart.toLowerCase()}.
               </p>
               <NotesPyramid top={product.top} heart={product.heart} base={product.base} />
               <div className="flex items-center gap-4 mt-6">
@@ -1096,7 +1096,7 @@ function ShopSection({ shopRef, products, collectionFilter, brandFilter, setColl
       </div>
 
       {products.length === 0 ? (
-        <p style={{ color: PARCH_DIM }}>No pieces match that combination yet — try clearing a filter.</p>
+        <p style={{ color: PARCH_DIM }}>No pieces match that combination yet â€” try clearing a filter.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {products.map((p, i) => <ProductCard key={p.id} p={p} onAdd={onAdd} delay={(i % 4) * 60} />)}
@@ -1156,7 +1156,7 @@ function ReviewsSection({ reviews, onWrite }) {
             <h2 style={{ fontSize: 32 }} className="mt-2 flex items-center gap-3">
               Reviews
               <span style={{ fontFamily: MONO_FONT, fontSize: 15, color: PARCH_DIM }} className="flex items-center gap-1">
-                <Star size={14} fill={GOLD} color={GOLD} /> {avg} · {reviews.length} reviews
+                <Star size={14} fill={GOLD} color={GOLD} /> {avg} Â· {reviews.length} reviews
               </span>
             </h2>
           </div>
@@ -1191,7 +1191,7 @@ function NewsletterCTA({ onSubmit, showToast }) {
     e.preventDefault();
     if (!email.includes("@")) return;
     onSubmit(email, "");
-    showToast("You're on the list — 10% code incoming");
+    showToast("You're on the list â€” 10% code incoming");
     setEmail("");
   };
   return (
@@ -1199,7 +1199,7 @@ function NewsletterCTA({ onSubmit, showToast }) {
       <div className="max-w-3xl mx-auto px-5 text-center">
         <Mail size={22} color={GOLD} className="mx-auto mb-4" />
         <h2 style={{ fontSize: 28 }}>Get first look at new arrivals</h2>
-        <p style={{ color: PARCH_DIM }} className="mt-2 text-sm">New drops, combo prices and restocks — plus 10% off your first order.</p>
+        <p style={{ color: PARCH_DIM }} className="mt-2 text-sm">New drops, combo prices and restocks â€” plus 10% off your first order.</p>
         <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3 mt-6 max-w-md mx-auto">
           <input
             value={email} onChange={(e) => setEmail(e.target.value)} type="email" required
@@ -1257,15 +1257,15 @@ function Footer() {
         <div>
           <h4 style={{ color: PARCH, fontSize: 13 }} className="mb-3">Payments</h4>
           <div style={{ color: PARCH_DIM }} className="flex flex-col gap-2 text-[13px]">
-            <span className="flex items-center gap-2"><Smartphone size={13} /> MTN MoMo · Telecel Cash</span>
-            <span className="flex items-center gap-2"><CreditCard size={13} /> Visa · Mastercard</span>
+            <span className="flex items-center gap-2"><Smartphone size={13} /> MTN MoMo Â· Telecel Cash</span>
+            <span className="flex items-center gap-2"><CreditCard size={13} /> Visa Â· Mastercard</span>
             <span className="flex items-center gap-2"><Banknote size={13} /> Cash on delivery (Accra)</span>
           </div>
         </div>
       </div>
       <div style={{ color: PARCH_DIM, borderTop: `1px solid ${LINE}` }} className="max-w-6xl mx-auto mt-10 pt-6 text-[11px] flex flex-col sm:flex-row justify-between gap-2">
-        <span>© 2026 Perfume Wura. All rights reserved.</span>
-        <span className="flex items-center gap-1"><ShieldCheck size={12} /> Demo storefront — checkout and tracking run on in-browser storage, not a live payment processor.</span>
+        <span>Â© 2026 Perfume Wura. All rights reserved.</span>
+        <span className="flex items-center gap-1"><ShieldCheck size={12} /> Demo storefront â€” checkout and tracking run on in-browser storage, not a live payment processor.</span>
       </div>
     </footer>
   );
@@ -1387,7 +1387,7 @@ function CartDrawer({ open, onClose, items, subtotal, updateQty, removeFromCart,
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {items.length === 0 && <p style={{ color: PARCH_DIM }} className="text-sm">Nothing here yet — go pick a scent.</p>}
+          {items.length === 0 && <p style={{ color: PARCH_DIM }} className="text-sm">Nothing here yet â€” go pick a scent.</p>}
           {items.map((c) => (
             <div key={c.id} className="flex gap-3">
               <Bottle hue={c.hue} size={40} />
@@ -1505,10 +1505,10 @@ function CheckoutModal({ items, subtotal, onClose, onPlace }) {
             <div className="flex gap-2 mt-5">
               <button onClick={() => setStep(1)} style={{ border: `1px solid ${LINE}`, color: PARCH_DIM }} className="flex-1 py-3 rounded-full text-sm">Back</button>
               <button onClick={confirm} disabled={processing} style={{ background: GOLD, color: INK }} className="flex-1 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2">
-                {processing ? "Processing…" : `Pay ${fmt(subtotal + delivery)}`}
+                {processing ? "Processingâ€¦" : `Pay ${fmt(subtotal + delivery)}`}
               </button>
             </div>
-            <p style={{ color: PARCH_DIM, fontSize: 10.5 }} className="mt-3 text-center">Demo checkout — no real charge is made.</p>
+            <p style={{ color: PARCH_DIM, fontSize: 10.5 }} className="mt-3 text-center">Demo checkout â€” no real charge is made.</p>
           </div>
         )}
       </div>
@@ -1574,7 +1574,7 @@ function TrackModal({ onClose }) {
       const res = await window.storage.get(`orders:${orderId.trim().toUpperCase()}`, true);
       setOrder(JSON.parse(res.value));
     } catch (e) {
-      setError("No order found with that ID — double-check the code from your confirmation.");
+      setError("No order found with that ID â€” double-check the code from your confirmation.");
     } finally { setLoading(false); }
   };
 
@@ -1587,7 +1587,7 @@ function TrackModal({ onClose }) {
         <p style={{ color: PARCH_DIM, fontSize: 12.5 }} className="mt-1">Enter the order ID from your confirmation (e.g. SR482910).</p>
         <div className="flex gap-2 mt-4">
           <input value={orderId} onChange={(e) => setOrderId(e.target.value)} style={inputStyle} placeholder="SR482910" />
-          <button onClick={lookup} style={{ background: GOLD, color: INK }} className="px-4 rounded-xl text-sm font-semibold">{loading ? "…" : "Go"}</button>
+          <button onClick={lookup} style={{ background: GOLD, color: INK }} className="px-4 rounded-xl text-sm font-semibold">{loading ? "â€¦" : "Go"}</button>
         </div>
         {error && <p style={{ color: "#E19A9A", fontSize: 12 }} className="mt-3">{error}</p>}
         {order && (
@@ -1607,7 +1607,7 @@ function TrackModal({ onClose }) {
                 </div>
               );
             })}
-            <p style={{ color: PARCH_DIM, fontSize: 10.5 }} className="mt-4">Demo tracker — status advances automatically over minutes for preview purposes.</p>
+            <p style={{ color: PARCH_DIM, fontSize: 10.5 }} className="mt-4">Demo tracker â€” status advances automatically over minutes for preview purposes.</p>
           </div>
         )}
       </div>

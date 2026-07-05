@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import * as THREE from "three";
 import {
   ShoppingBag, X, Menu, Search, Heart, Star, Truck, Package,
   CheckCircle2, Mail, Phone, MapPin, ChevronRight, ChevronDown,
@@ -41,6 +42,19 @@ const COLLECTIONS = [
   { id: "musk", name: "Musk", tag: "Skin-close and quiet.", hue: "#A98F76" },
   { id: "citrus", name: "Citrus", tag: "Bright first, warm after.", hue: "#C7A93A" },
 ];
+
+/* Placeholder stock photography (Unsplash License — free for commercial use,
+   no attribution required). Swap any of these for real product photos by
+   setting an `image` field on a product in PRODUCTS below — that always
+   takes priority over this pool. */
+const STOCK_PHOTOS = {
+  oud: "https://images.unsplash.com/photo-1598634222670-87c5f558119c?auto=format&fit=crop&w=600&q=70",
+  woody: "https://images.unsplash.com/photo-1598634222670-87c5f558119c?auto=format&fit=crop&w=600&q=70",
+  floral: "https://images.unsplash.com/photo-1708265500552-c256df13d3ca?auto=format&fit=crop&w=600&q=70",
+  amber: "https://images.unsplash.com/photo-1543422655-ac1c6ca993ed?auto=format&fit=crop&w=600&q=70",
+  musk: "https://images.unsplash.com/photo-1609749282774-5883a366cdd1?auto=format&fit=crop&w=600&q=70",
+  citrus: "https://images.unsplash.com/photo-1609749282774-5883a366cdd1?auto=format&fit=crop&w=600&q=70",
+};
 
 const BRANDS = [
   { id: "lattafa", name: "Lattafa", origin: "U.A.E.", blurb: "Bold orientals, honest prices, cult following." },
@@ -177,6 +191,71 @@ function Bottle({ hue = GOLD, size = 64, animate = false, floor = true }) {
    (top / heart / base) is real information a perfume shopper needs,
    so it's used as a recurring divider instead of decorative numbering.
 =======================================================================*/
+/* ============================ 3D ROTATING GEM ==========================
+   A lightweight three.js accent — a faceted gem that slowly rotates,
+   used sparingly at a couple of key visual moments (hero, featured
+   product) rather than everywhere. Fails silently if WebGL isn't
+   available, so it never breaks the page on an older device/browser.
+=========================================================================*/
+function RotatingGem({ size = 160, hue = "#C79A4B" }) {
+  const mountRef = useRef(null);
+
+  useEffect(() => {
+    const el = mountRef.current;
+    if (!el) return;
+    let frameId, renderer, geo, mat, disposed = false;
+
+    try {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+      camera.position.set(0, 0, 4.4);
+
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setSize(size, size);
+      renderer.setClearColor(0x000000, 0);
+      el.appendChild(renderer.domElement);
+
+      geo = new THREE.IcosahedronGeometry(1.4, 0);
+      mat = new THREE.MeshStandardMaterial({ color: hue, metalness: 0.65, roughness: 0.25, flatShading: true });
+      const mesh = new THREE.Mesh(geo, mat);
+      scene.add(mesh);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      const key = new THREE.DirectionalLight(0xffffff, 1.0);
+      key.position.set(3, 4, 5);
+      scene.add(key);
+      const rim = new THREE.DirectionalLight(0xffffff, 0.35);
+      rim.position.set(-3, -2, -4);
+      scene.add(rim);
+
+      let t = 0;
+      const animate = () => {
+        if (disposed) return;
+        t += 0.006;
+        mesh.rotation.x = t * 0.6;
+        mesh.rotation.y = t;
+        renderer.render(scene, camera);
+        frameId = requestAnimationFrame(animate);
+      };
+      animate();
+
+      return () => {
+        disposed = true;
+        cancelAnimationFrame(frameId);
+        geo.dispose();
+        mat.dispose();
+        renderer.dispose();
+        if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+      };
+    } catch (e) {
+      return; // WebGL unavailable — no 3D accent, rest of the page is unaffected
+    }
+  }, [size, hue]);
+
+  return <div ref={mountRef} style={{ width: size, height: size }} aria-hidden="true" />;
+}
+
 function NotesPyramid({ top, heart, base }) {
   const rows = [
     ["Top", top, "70%"],
@@ -347,6 +426,8 @@ export default function App() {
       />
 
       <Hero onShop={() => scrollToShop(null)} onExplore={() => scrollToShop("oud")} />
+
+      <FeaturedSection onAdd={addToCart} />
 
       <CollectionsSection onPick={scrollToShop} />
 
@@ -536,7 +617,22 @@ function IntroSplash({ onDone }) {
           transform: phase === "fall" ? undefined : "translateX(-50%)",
           opacity: phase === "fadeout" ? 0 : 1, transition: "opacity .4s ease",
         }}>
-          <Bottle hue={GOLD} size={110} animate={phase !== "fall"} floor={phase !== "fall"} />
+          <img
+            src={STOCK_PHOTOS.oud} alt="Perfume Wura"
+            style={{
+              width: 108, height: 140, objectFit: "cover", borderRadius: 10,
+              filter: "drop-shadow(0 14px 22px rgba(0,0,0,0.55))",
+              animation: phase !== "fall" ? "bob 4.5s ease-in-out infinite" : "none",
+              display: "block",
+            }}
+          />
+          {phase !== "fall" && (
+            <div style={{
+              position: "absolute", left: "50%", bottom: -6, width: 72, height: 14,
+              background: `radial-gradient(ellipse, ${GOLD}66 0%, transparent 72%)`,
+              transform: "translateX(-50%)", filter: "blur(1px)",
+            }} />
+          )}
         </div>
 
         {phase !== "fall" && petals.map((p, i) => (
@@ -687,6 +783,9 @@ function Hero({ onShop, onExplore }) {
 
         <div className="relative flex justify-center items-end" style={{ minHeight: 220 }}>
           <div style={{ position: "absolute", width: 280, height: 280, borderRadius: "50%", background: `radial-gradient(circle, ${GOLD}33, transparent 70%)`, filter: "blur(6px)" }} />
+          <div style={{ position: "absolute", top: -34, left: "50%", transform: "translateX(-50%)", opacity: 0.9 }}>
+            <RotatingGem size={72} hue={GOLD} />
+          </div>
           <div style={{ position: "absolute", left: "50%", transform: "translateX(-135%)", opacity: 0.55 }} className="hidden sm:block">
             <Bottle hue={GREEN_BRIGHT} size={80} />
           </div>
@@ -813,6 +912,68 @@ function PromotionsSection({ combos, onAdd }) {
   );
 }
 
+/* ========================= PERFUME OF THE WEEK ========================
+   Rotates automatically based on the ISO week number, so it changes on
+   its own without needing an admin panel — no two consecutive weeks
+   land on the same product (deterministic, not random).
+=========================================================================*/
+function FeaturedSection({ onAdd }) {
+  const product = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now - start) / 86400000);
+    const week = Math.ceil((days + start.getDay() + 1) / 7);
+    return PRODUCTS[week % PRODUCTS.length];
+  }, []);
+
+  const hue = COLLECTIONS.find((c) => c.id === product.collection)?.hue;
+  const brandName = BRANDS.find((b) => b.id === product.brand)?.name;
+  const photo = product.image || STOCK_PHOTOS[product.collection];
+
+  return (
+    <section style={{ background: `linear-gradient(135deg, ${INK_2}, ${INK})`, borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }} className="py-12 md:py-20 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-5">
+        <Reveal>
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div className="relative order-2 md:order-1">
+              <div style={{ position: "absolute", top: -26, right: 6, zIndex: 2 }}>
+                <RotatingGem size={64} hue={GOLD_BRIGHT} />
+              </div>
+              <div className="rounded-2xl overflow-hidden" style={{ height: 280, border: `1px solid ${LINE}` }}>
+                {photo ? (
+                  <img src={photo} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div style={{ background: `radial-gradient(circle, ${hue}30, transparent 70%)` }} className="w-full h-full flex items-center justify-center">
+                    <Bottle hue={hue} size={100} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="order-1 md:order-2">
+              <span style={{ background: `${GOLD}22`, color: GOLD_BRIGHT }} className="text-[11px] font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1">
+                <Sparkles size={11} /> Featured This Week
+              </span>
+              <h2 style={{ fontSize: 32 }} className="mt-4">{product.name}</h2>
+              <span style={{ fontFamily: MONO_FONT, color: GOLD, fontSize: 12 }}>{brandName} · {product.size}</span>
+              <p style={{ color: PARCH_DIM }} className="mt-3 text-sm leading-relaxed">
+                This week's pick — {product.rating}★ from {product.reviews} customers, opening on {product.top.toLowerCase()} before settling into {product.heart.toLowerCase()}.
+              </p>
+              <NotesPyramid top={product.top} heart={product.heart} base={product.base} />
+              <div className="flex items-center gap-4 mt-6">
+                <span style={{ fontFamily: MONO_FONT, fontSize: 24 }}>{fmt(product.price)}</span>
+                <button onClick={() => onAdd(product.id)} style={{ background: GOLD, color: INK }} className="px-6 py-3 rounded-full text-sm font-semibold hover:brightness-110 transition">
+                  Add to cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ============================== BRANDS ============================== */
 function BrandsSection({ onPick }) {
   return (
@@ -845,7 +1006,10 @@ function BrandsSection({ onPick }) {
 /* =============================== SHOP ================================ */
 function ProductCard({ p, onAdd, delay }) {
   const [open, setOpen] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const hue = COLLECTIONS.find((c) => c.id === p.collection)?.hue;
+  const photo = p.image || STOCK_PHOTOS[p.collection];
+
   return (
     <Reveal delay={delay}>
       <div style={{ background: INK_2, border: `1px solid ${LINE}` }} className="rounded-2xl p-4 md:p-5 h-full flex flex-col group">
@@ -856,14 +1020,26 @@ function ProductCard({ p, onAdd, delay }) {
           <Heart size={15} color={PARCH_DIM} className="ml-auto cursor-pointer hover:text-current" style={{ color: PARCH_DIM }} />
         </div>
 
-        <div
-          style={{ background: `radial-gradient(circle at 50% 35%, ${hue}2E 0%, transparent 68%)`, borderRadius: 14 }}
-          className="flex justify-center py-5 -mx-1"
-        >
-          <div className="group-hover:-translate-y-1 transition-transform duration-300">
-            <Bottle hue={hue} size={72} />
+        {photo && !imgFailed ? (
+          <div className="relative -mx-1 rounded-[14px] overflow-hidden" style={{ height: 132 }}>
+            <img
+              src={photo} alt={p.name} loading="lazy" onError={() => setImgFailed(true)}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              style={{ display: "block" }}
+            />
+            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(180deg, transparent 40%, ${INK_2}CC 100%)` }} />
+            <span style={{ position: "absolute", bottom: 6, left: 8, width: 8, height: 8, borderRadius: "50%", background: hue, boxShadow: "0 0 0 2px rgba(0,0,0,0.3)" }} />
           </div>
-        </div>
+        ) : (
+          <div
+            style={{ background: `radial-gradient(circle at 50% 35%, ${hue}2E 0%, transparent 68%)`, borderRadius: 14 }}
+            className="flex justify-center py-5 -mx-1"
+          >
+            <div className="group-hover:-translate-y-1 transition-transform duration-300">
+              <Bottle hue={hue} size={72} />
+            </div>
+          </div>
+        )}
 
         <span style={{ fontFamily: MONO_FONT, fontSize: 10, color: GOLD }}>{BRANDS.find((b) => b.id === p.brand)?.name}</span>
         <h3 style={{ fontSize: 18 }} className="mt-0.5">{p.name}</h3>
@@ -1051,11 +1227,17 @@ function Footer() {
             <span style={{ fontFamily: DISPLAY_FONT, fontSize: 19 }}>Perfume Wura</span>
           </div>
           <p style={{ color: PARCH_DIM, fontSize: 12.5 }} className="leading-relaxed">Curated Arabian and niche fragrance, shipped across Ghana.</p>
-          <div className="flex items-center gap-3 mt-4">
-            <a href="https://wa.me/233543864580" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon size={16} color={PARCH_DIM} /></a>
-            <a href="https://www.tiktok.com/@perfumewura" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><TikTokIcon size={15} color={PARCH_DIM} /></a>
-            <Instagram size={16} color={PARCH_DIM} />
-            <Facebook size={16} color={PARCH_DIM} />
+          <div className="flex flex-col gap-2 mt-4 text-[13px]">
+            <a href="https://wa.me/233543864580" target="_blank" rel="noopener noreferrer" style={{ color: PARCH }} className="flex items-center gap-2 hover:text-current">
+              <WhatsAppIcon size={16} color={GREEN_BRIGHT} /> <strong style={{ fontWeight: 700 }}>054 386 4580</strong>
+            </a>
+            <a href="https://www.tiktok.com/@perfumewura" target="_blank" rel="noopener noreferrer" style={{ color: PARCH }} className="flex items-center gap-2 hover:text-current">
+              <TikTokIcon size={15} color={PARCH} /> <strong style={{ fontWeight: 700 }}>@perfumewura</strong>
+            </a>
+            <div className="flex items-center gap-3 mt-1">
+              <Instagram size={16} color={PARCH_DIM} />
+              <Facebook size={16} color={PARCH_DIM} />
+            </div>
           </div>
         </div>
         <div>
@@ -1067,7 +1249,7 @@ function Footer() {
         <div>
           <h4 style={{ color: PARCH, fontSize: 13 }} className="mb-3">Support</h4>
           <ul style={{ color: PARCH_DIM }} className="space-y-2 text-[13px]">
-            <li className="flex items-center gap-2"><Phone size={13} /> 054 386 4580 / 024 273 9071</li>
+            <li className="flex items-center gap-2"><Phone size={13} /> <strong style={{ fontWeight: 700, color: PARCH }}>054 386 4580 / 024 273 9071</strong></li>
             <li className="flex items-center gap-2"><Mail size={13} /> hello@perfumewura.com</li>
             <li className="flex items-center gap-2"><MapPin size={13} /> Osu, Accra</li>
           </ul>
